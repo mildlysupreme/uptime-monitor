@@ -2,5 +2,9 @@
   { "name": "schematic.org", "url": "https://schematic.org" },
   { "name": "kennalp.com", "url": "https://kennalp.com" },
   { "name": "teqqed.com", "url": "https://teqqed.com" },
-  { "name": "HetCoPack", "url": "https://hetcopack.vercel.app" }
+  { "name": "HetCoPack", "url": "https://hetcopack.vercel.app" },
+  { "name": "localtalent.now", "url": "https://localtalent.now" },
+  { "name": "fryslan.club", "url": "https://fryslan.club" },
+  { "name": "killerhabits.app", "url": "https://killerhabits.app" },
+  { "name": "werky.nl", "url": "https://werky.nl" }
 ]
