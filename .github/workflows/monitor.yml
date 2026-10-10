@@ -1,0 +1,43 @@
+name: Uptime monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      test:
+        description: Just send a test message to Slack
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: uptime-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check sites
+        run: node monitor.mjs ${{ inputs.test && '--test' || '' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # The monitor remembers which sites are down in state.json, so it only
+      # alerts when something changes instead of every 5 minutes.
+      - name: Save state
+        run: |
+          if [ -n "$(git status --porcelain state.json)" ]; then
+            git config user.name 'uptime-monitor'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add state.json
+            git commit -m 'Update monitor state'
+            git pull --rebase
+            git push
+          fi
