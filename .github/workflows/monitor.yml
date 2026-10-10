@@ -2,7 +2,8 @@ name: Uptime monitor
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    # Every 8 hours: 07:00, 15:00 and 23:00 UTC (9:00, 17:00, 1:00 Amsterdam summer time)
+    - cron: '0 7,15,23 * * *'
   workflow_dispatch:
     inputs:
       test:
@@ -11,11 +12,8 @@ on:
         default: false
 
 permissions:
-  contents: write
-
-concurrency:
-  group: uptime-monitor
-  cancel-in-progress: false
+  actions: write
+  contents: read
 
 jobs:
   check:
@@ -29,15 +27,10 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-      # The monitor remembers which sites are down in state.json, so it only
-      # alerts when something changes instead of every 5 minutes.
-      - name: Save state
-        run: |
-          if [ -n "$(git status --porcelain state.json)" ]; then
-            git config user.name 'uptime-monitor'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add state.json
-            git commit -m 'Update monitor state'
-            git pull --rebase
-            git push
-          fi
+      # GitHub switches off schedules in repos with no activity for 60 days.
+      # Re-enabling the workflow on every run keeps it switched on.
+      - name: Keep schedule alive
+        if: always()
+        run: gh workflow enable monitor.yml --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ github.token }}
