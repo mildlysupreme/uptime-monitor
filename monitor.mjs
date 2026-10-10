@@ -160,7 +160,6 @@ async function postToSlack(text) {
     console.log(`[dry run] would post to Slack:\n${text}\n`);
     return;
   }
-  if (!WEBHOOK) throw new Error('SLACK_WEBHOOK_URL is not set. See README.md, step 2.');
   const res = await fetch(WEBHOOK, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -172,6 +171,13 @@ async function postToSlack(text) {
 // --- main -------------------------------------------------------------------
 
 const sites = JSON.parse(await readFile(SITES_FILE, 'utf8'));
+
+// Not set up yet: skip quietly instead of failing every 5 minutes. Nothing is
+// saved, so the first real run still reports whatever is down.
+if (!WEBHOOK && !DRY_RUN) {
+  console.log('SLACK_WEBHOOK_URL is not set yet, skipping. See README.md, step 2.');
+  process.exit(0);
+}
 
 if (args.has('--test')) {
   await postToSlack(`:wave: Uptime monitor is connected. Watching ${sites.length} sites: ${sites.map(link).join(', ')}`);
